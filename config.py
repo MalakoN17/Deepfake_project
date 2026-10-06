@@ -26,6 +26,10 @@ class Config:
     LOGIN_MAX_ATTEMPTS = 5                  # failed logins before lockout
     LOGIN_LOCK_MINUTES = 5
 
+    # --- Server (python run.py) ---------------------------------------
+    HOST = os.getenv("HOST", "0.0.0.0")      # 0.0.0.0 = reachable from other machines
+    PORT = int(os.getenv("PORT", "5005"))
+
     # --- Database -------------------------------------------------------
     INSTANCE_DIR = BASE_DIR / "instance"
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL", f"sqlite:///{INSTANCE_DIR / 'app.db'}")
@@ -61,6 +65,11 @@ class Config:
     QUALITY_MIN = 40          # below this an Approved result is downgraded
     MIN_FACE_FOR_IDENTITY = 60  # pixels; smaller faces are not compared with the reference
     ALERT_COOLDOWN_SECONDS = 30
+
+
+def server_address(debug=False):
+    """(host, port) for run.py. Debug mode is always local-only: the debug page allows code execution."""
+    return ("127.0.0.1" if debug else Config.HOST), Config.PORT
 
 
 class TestConfig(Config):

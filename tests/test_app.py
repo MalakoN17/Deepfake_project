@@ -11,7 +11,7 @@ import pytest
 from app.extensions import db
 from app.models import Alert, Analysis, AuditLog, Meeting, User
 from app.services.risk import Smoother, evaluate
-from config import Config, TestConfig
+from config import Config, TestConfig, server_address
 from conftest import login
 
 CFG = {k: getattr(TestConfig, k) for k in dir(TestConfig) if k.isupper()}
@@ -247,3 +247,9 @@ def test_models_load_from_folder_with_hebrew_name(tmp_path):
     shutil.copytree(Config.MODEL_DIR, folder)
     FaceAnalyzer(folder)
     assert 0 <= MesoNetDetector(folder / "meso4_df.onnx").predict(np.zeros((256, 256, 3), np.uint8)) <= 1
+
+
+def test_server_address_defaults_and_debug_is_local_only():
+    assert server_address(debug=False) == (Config.HOST, Config.PORT)
+    assert Config.PORT == 5005
+    assert server_address(debug=True) == ("127.0.0.1", Config.PORT)
