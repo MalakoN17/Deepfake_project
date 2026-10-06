@@ -1,0 +1,23 @@
+# Runtime dependencies. Version ranges so the project installs on Python 3.10 - 3.14
+# (Windows and Linux, CPU only, no GPU needed).
+# The exact versions that were tested are in requirements-lock.txt.
+# Runtime dependencies. Installs on Python 3.8 through 3.14, Windows and Linux.
+# pip picks the right line automatically according to the Python version in use.
+Flask>=3.1,<4; python_version >= "3.9"
+Flask==2.3.3; python_version < "3.9"
+Werkzeug>=3.0,<4; python_version >= "3.9"
+Werkzeug==2.3.8; python_version < "3.9"
+Flask-SQLAlchemy>=3.1,<4
+Flask-Login>=0.6.3,<0.7
+Flask-WTF>=1.2,<2
+email-validator>=2.1
+python-dotenv>=1.0
+opencv-python-headless>=4.12,<4.15; python_version >= "3.9"
+opencv-python-headless==4.11.0.86; python_version < "3.9"
+numpy>=1.26,<3; python_version >= "3.9"
+numpy==1.24.4; python_version < "3.9"
+psutil>=6.0
+waitress>=3.0; python_version >= "3.9"
+waitress==3.0.0; python_version < "3.9"
+pytest>=8.0; python_version >= "3.9"
+pytest==8.3.4; python_version < "3.9"

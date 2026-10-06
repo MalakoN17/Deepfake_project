@@ -1,0 +1,10 @@
+{% macro result_badge(result) -%}
+  <span class="badge-r {{ result_class.get(result, '') }}">{{ result }}</span>
+{%- endmacro %}
+{% macro severity_badge(sev) -%}
+  <span class="badge-r {{ severity_class.get(sev, '') }}">{{ sev }}</span>
+{%- endmacro %}
+{% macro risk(value) -%}
+  {% set cls = 'bad' if value >= 70 else 'warn' if value >= 31 else 'ok' %}
+  <span class="riskbar {{ cls }}"><span style="width: {{ value|round|int }}%"></span></span><span class="num">{{ value|round|int }}%</span>
+{%- endmacro %}

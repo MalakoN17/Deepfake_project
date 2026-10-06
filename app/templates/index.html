@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block public_class %}hero{% endblock %}
+{% block public %}
+<p class="muted">{{ org_name }}, academic prototype</p>
+<h1>Is the person on your video call really who they say they are?</h1>
+<p>This system analyses organizational video meetings for signs of deepfake impersonation, compares the
+  participant with a reference photo of the claimed employee, and gives the security team a risk score,
+  a trust score and an audit trail for every check.</p>
+<div class="flow" aria-label="Processing pipeline">
+  <span>Webcam, Zoom or Teams</span><span>Frame sampling</span><span>Face detection</span>
+  <span>Deepfake model</span><span>Identity match</span><span>Risk engine</span><span>Alerts and logs</span>
+</div>
+{% if current_user.is_authenticated %}
+  <a class="btn btn-primary" href="{{ url_for('main.dashboard') }}">Open the dashboard</a>
+{% else %}
+  <a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign in</a>
+{% endif %}
+<p class="muted mt-4" style="font-size:14px">Scores are probabilities, not proof. A high risk result should trigger
+  additional verification, not an automatic decision.</p>
+{% endblock %}
+{% block content %}{{ self.public() }}{% endblock %}

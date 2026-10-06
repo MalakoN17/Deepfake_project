@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import result_badge, severity_badge, risk with context %}
+{% block title %}{{ meeting.meeting_name }}{% endblock %}
+{% block content %}
+{% set last = meeting.analyses[-1] if meeting.analyses else none %}
+<div class="page-head">
+  <div><h1>{{ meeting.meeting_name }}</h1>
+    <p>{{ meeting.platform }} ({{ meeting.source_type }}), analysed by {{ meeting.user.name }} on {{ meeting.start_time|dt }}
+    {% if meeting.claimed_identity %}<br>Participant claims to be <b>{{ meeting.claimed_identity.full_name }}</b> ({{ meeting.claimed_identity.job_title }}){% endif %}</p></div>
+  {% if last %}<div>{{ result_badge(last.result) }}</div>{% endif %}
+</div>
+{% if last %}
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Deepfake risk</div><div class="kpi-value">{{ last.deepfake_score|round|int }}%</div></div>
+  <div class="kpi"><div class="kpi-label">Trust score</div><div class="kpi-value">{{ last.trust_score|round|int }}%</div></div>
+  <div class="kpi"><div class="kpi-label">Identity match</div><div class="kpi-value">{{ (last.identity_match_score|round|int ~ '%') if last.identity_match_score is not none else '-' }}</div></div>
+  <div class="kpi"><div class="kpi-label">Input quality</div><div class="kpi-value">{{ last.quality_score|round|int }}</div></div>
+  <div class="kpi"><div class="kpi-label">Time to first score</div><div class="kpi-value">{{ meeting.first_score_ms|ms }}</div></div>
+</div>
+{% endif %}
+<section class="panel mb-3"><h2>Analysed windows</h2><div class="table-wrap"><table class="data">
+  <thead><tr><th>Time</th><th>Frames (faces)</th><th>Risk</th><th>Trust</th><th>Identity</th><th>Quality</th><th>Result</th><th>Reasons</th>
+    <th>Face detection</th><th>Inference</th><th>Total</th><th>CPU / RAM</th></tr></thead>
+  <tbody>{% for a in meeting.analyses %}
+    <tr><td class="num">{{ a.timestamp|dt('%H:%M:%S') }}</td><td class="num">{{ a.frames_analyzed }} ({{ a.faces_detected }})</td>
+      <td>{{ risk(a.deepfake_score) }}</td><td class="num">{{ a.trust_score|round|int }}%</td>
+      <td class="num">{{ (a.identity_match_score|round|int ~ '%') if a.identity_match_score is not none else '-' }}</td>
+      <td class="num">{{ a.quality_score|round|int }}</td><td>{{ result_badge(a.result) }}</td><td>{{ a.reasons }}</td>
+      <td class="num">{{ a.face_ms|ms }}</td><td class="num">{{ a.inference_ms|ms }}</td><td class="num">{{ a.processing_time_ms|ms }}</td>
+      <td class="num">{{ a.cpu_percent if a.cpu_percent is not none else '-' }}% / {{ a.ram_mb|round|int if a.ram_mb else '-' }} MB</td></tr>
+  {% else %}<tr><td colspan="12" class="muted">No windows were analysed in this session.</td></tr>{% endfor %}</tbody>
+</table></div>
+{% if last %}<p class="muted mt-2 mb-0" style="font-size:13px">Model: {{ last.model_name }}. Times are measured on this server for all frames in the window.</p>{% endif %}
+</section>
+{% set alerts = meeting.analyses|map(attribute='alerts')|sum(start=[]) %}
+{% if alerts %}
+<section class="panel"><h2>Alerts from this session</h2>
+  <table class="data"><tbody>{% for al in alerts %}
+    <tr><td>{{ severity_badge(al.severity) }}</td><td>{{ al.message }}</td><td>{{ al.status }}</td><td class="num">{{ al.timestamp|dt }}</td></tr>
+  {% endfor %}</tbody></table>
+  <a class="btn btn-ghost mt-3" href="{{ url_for('main.alerts') }}">Handle alerts</a></section>
+{% endif %}
+{% endblock %}

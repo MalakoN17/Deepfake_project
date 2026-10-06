@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Live analysis{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Live analysis</h1>
+  <p>Analyse your camera, or share the Zoom or Teams window to analyse the person on the call.
+    About one frame per second is sent to the server; a record is saved every {{ config.LIVE_WINDOW_FRAMES }} frames.</p></div></div>
+<div class="live-grid">
+  <div>
+    <div class="stage">
+      <video id="video" autoplay muted playsinline></video>
+      <canvas class="overlay" id="overlay"></canvas>
+      <div class="stage-empty" id="stage-empty">Choose a source and start the session.<br>Your browser will ask for permission.</div>
+    </div>
+    <section class="panel mt-3">
+      <h2>Risk over time</h2>
+      <canvas class="timeline" id="timeline" aria-label="Deepfake risk per frame and smoothed risk"></canvas>
+      <p class="muted mb-0" style="font-size:13px">Bars: risk of each frame. Line: smoothed risk over the last {{ config.SMOOTHING_WINDOW }} frames,
+        which is what decisions use. Dashed lines: Suspicious ({{ config.RISK_SUSPICIOUS }}%) and Rejected ({{ config.RISK_REJECTED }}%).</p>
+    </section>
+  </div>
+  <div>
+    <section class="panel mb-3" id="setup">
+      <div class="mb-3"><label class="form-label" for="meeting_name">Meeting name</label>
+        <input class="form-control" id="meeting_name" maxlength="150" placeholder="e.g. Finance approval call"></div>
+      <div class="mb-3"><label class="form-label" for="platform">Platform</label>
+        <select class="form-select" id="platform">{% for v, l in platforms %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+      <div class="mb-3"><label class="form-label" for="identity">Participant claims to be</label>
+        <select class="form-select" id="identity">{% for v, l in identities %}<option value="{{ v }}">{{ l }}</option>{% endfor %}</select></div>
+      <div class="mb-3"><span class="form-label d-block">Source</span>
+        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="source" id="src-cam" value="webcam" checked><label class="form-check-label" for="src-cam">Camera</label></div>
+        <div class="form-check form-check-inline"><input class="form-check-input" type="radio" name="source" id="src-screen" value="screen"><label class="form-check-label" for="src-screen">Share a window (Zoom / Teams)</label></div></div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary" id="start">Start session</button>
+        <button class="btn btn-ghost" id="stop" disabled>Stop and save</button>
+      </div>
+      <div class="field-error mt-2" id="error" role="alert"></div>
+    </section>
+    <section class="verdict" id="verdict" aria-live="polite">
+      <div class="muted" style="font-size:13px" id="verdict-label">Waiting for the first frame</div>
+      <div class="verdict-result" id="result">-</div>
+      <div class="muted mt-1" id="reasons" style="font-size:14px"></div>
+      <div class="meter-row"><span>Deepfake risk</span><div class="meter"><span id="m-risk"></span></div><b class="num" id="v-risk">-</b></div>
+      <div class="meter-row"><span>Trust</span><div class="meter"><span id="m-trust"></span></div><b class="num" id="v-trust">-</b></div>
+      <div class="meter-row"><span>Identity match</span><div class="meter"><span id="m-id"></span></div><b class="num" id="v-id">-</b></div>
+      <div class="meter-row"><span>Input quality</span><div class="meter"><span id="m-q"></span></div><b class="num" id="v-q">-</b></div>
+      <div class="latency">
+        <div><b id="l-face">-</b><span>Face detection</span></div>
+        <div><b id="l-inf">-</b><span>Model + identity</span></div>
+        <div><b id="l-server">-</b><span>Server total</span></div>
+        <div><b id="l-rtt">-</b><span>Round trip</span></div>
+      </div>
+      <p class="muted mt-2 mb-0" style="font-size:13px">First score after <b class="num" id="first">-</b>, frames analysed: <b class="num" id="frames">0</b></p>
+      <div class="alert-toast" id="alert-toast" role="alert"></div>
+    </section>
+  </div>
+</div>
+<script type="application/json" id="live-config">{{ {"suspicious": config.RISK_SUSPICIOUS, "rejected": config.RISK_REJECTED,
+  "start_url": url_for('analysis.live_start'), "frame_url": url_for('analysis.live_frame', meeting_id=0),
+  "stop_url": url_for('analysis.live_stop', meeting_id=0)}|tojson }}</script>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/live.js') }}"></script>{% endblock %}

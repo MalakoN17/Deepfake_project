@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Hello {{ name }}{% endblock %}
+{% block public %}
+<div class="panel">
+  <h2>Hello, {{ name }}!</h2>
+  <p class="muted mb-0">This page is rendered by the dynamic route <code>/user/&lt;name&gt;</code> with a Jinja2
+    template. The name comes from the URL and is escaped automatically, so it cannot inject HTML or scripts.</p>
+</div>
+{% endblock %}
+{% block content %}{{ self.public() }}{% endblock %}

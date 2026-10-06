@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% from "_macros.html" import severity_badge, risk with context %}
+{% block title %}Alerts{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Alerts</h1><p>Raised when a check is Suspicious or Rejected. A high-risk alert should lead to verification through a second channel, not to an automatic decision.</p></div>
+  <form method="get" class="d-flex gap-2"><select class="form-select" name="status" aria-label="Filter by status">
+    {% for value, label in [('active','Needs attention'),('Open','Open'),('Acknowledged','Acknowledged'),('Escalated','Escalated'),('Resolved','Resolved'),('all','All alerts')] %}
+      <option value="{{ value }}" {{ 'selected' if status == value }}>{{ label }}</option>{% endfor %}</select>
+    <button class="btn btn-ghost">Filter</button>
+    </form>
+</div>
+<section class="panel"><div class="table-wrap"><table class="data">
+  <thead><tr><th>Severity</th><th>Alert</th><th>Risk</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for al in alerts %}
+    <tr><td>{{ severity_badge(al.severity) }}</td>
+      <td>{{ al.message }}<br><a class="muted" href="{{ url_for('analysis.detail', meeting_id=al.analysis.meeting_id) }}">View analysis</a></td>
+      <td>{{ risk(al.analysis.deepfake_score) }}</td><td class="num">{{ al.timestamp|dt }}</td>
+      <td>{{ al.status }}{% if al.handler %}<br><span class="muted">by {{ al.handler.name }}</span>{% endif %}</td>
+      <td class="text-nowrap">{% if al.status != 'Resolved' %}
+        {% for action, label in [('acknowledge','Acknowledge'),('escalate','Request verification'),('resolve','Resolve')] %}
+          {% if not (action == 'acknowledge' and al.status != 'Open') %}
+          <form method="post" action="{{ url_for('main.update_alert', alert_id=al.alert_id, action=action) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-sm {{ 'btn-danger-ghost' if action == 'escalate' else 'btn-ghost' }}">{{ label }}</button></form>
+          {% endif %}
+        {% endfor %}{% else %}<span class="muted">Closed</span>{% endif %}</td></tr>
+  {% else %}
+    <tr><td colspan="6" class="muted">No alerts in this view.</td></tr>
+  {% endfor %}
+  </tbody></table></div></section>
+{% endblock %}

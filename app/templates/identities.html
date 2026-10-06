@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Reference identities{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Reference identities</h1>
+  <p>Known employees whose face is used to verify that a participant is who they claim to be.
+    Photos are biometric data: they are stored outside the public folders and only admins can see them.</p></div></div>
+<div class="grid-2">
+<section class="panel"><div class="table-wrap"><table class="data">
+  <thead><tr><th>Photo</th><th>Name</th><th>Job title</th><th>Added</th><th></th></tr></thead>
+  <tbody>{% for i in identities %}
+    <tr><td><img src="{{ url_for('identities.photo', identity_id=i.identity_id) }}" alt="{{ i.full_name }}" width="56" height="56" style="object-fit:cover;border-radius:6px"></td>
+      <td>{{ i.full_name }}</td><td>{{ i.job_title }}</td><td class="num">{{ i.created_at|dt('%d/%m/%Y') }}</td>
+      <td><form method="post" action="{{ url_for('identities.delete', identity_id=i.identity_id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger-ghost">Delete</button></form></td></tr>
+  {% else %}<tr><td colspan="5" class="muted">No reference identities yet. Add one to enable identity verification.</td></tr>{% endfor %}</tbody>
+</table></div></section>
+<section class="panel"><h2>Add an identity</h2>
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {{ form.hidden_tag() }}
+    {% for field in [form.full_name, form.job_title] %}
+      <div class="mb-3">{{ field.label(class="form-label") }}{{ field(class="form-control") }}
+        {% for e in field.errors %}<div class="field-error">{{ e }}</div>{% endfor %}</div>{% endfor %}
+    <div class="mb-3">{{ form.photo.label(class="form-label") }}{{ form.photo(class="form-control", accept=".jpg,.jpeg,.png") }}
+      {% for e in form.photo.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      <div class="muted mt-1" style="font-size:13px">A clear, front-facing photo of one person.</div></div>
+    {{ form.submit(class="btn btn-primary") }}
+  </form></section>
+</div>
+{% endblock %}

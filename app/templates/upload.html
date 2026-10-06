@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Analyze a video{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Analyze a video</h1>
+  <p>Upload a recording of a meeting participant. The system samples {{ config.SAMPLE_FPS }} frames per second
+    (up to {{ config.MAX_SAMPLED_FRAMES }}), checks each face for manipulation and, if you choose a claimed identity,
+    compares it with the reference photo.</p></div></div>
+<div class="grid-2">
+<section class="panel">
+  <form method="post" enctype="multipart/form-data" novalidate id="upload-form">
+    {{ form.hidden_tag() }}
+    {% for field in [form.meeting_name, form.platform, form.claimed_identity] %}
+    <div class="mb-3">{{ field.label(class="form-label") }}
+      {{ field(class="form-select" if field.type == 'SelectField' else "form-control") }}
+      {% for e in field.errors %}<div class="field-error">{{ e }}</div>{% endfor %}</div>
+    {% endfor %}
+    <div class="mb-3">{{ form.video.label(class="form-label") }}
+      {{ form.video(class="form-control", accept=".mp4,.avi,.mov,video/mp4,video/quicktime,video/x-msvideo") }}
+      {% for e in form.video.errors %}<div class="field-error">{{ e }}</div>{% endfor %}
+      <div class="muted mt-1" style="font-size:13px">MP4, AVI or MOV, up to {{ (config.MAX_CONTENT_LENGTH / 1048576)|int }} MB. The file is deleted after the analysis.</div></div>
+    {{ form.submit(class="btn btn-primary") }}
+  </form>
+</section>
+<section class="panel"><h2>How the decision is made</h2>
+  <p class="muted mb-2">Deepfake risk below {{ config.RISK_SUSPICIOUS }}% with a good identity match is <b>Approved</b>.
+    From {{ config.RISK_SUSPICIOUS }}% it is <b>Suspicious</b>, and from {{ config.RISK_REJECTED }}% or with a clear identity mismatch it is <b>Rejected</b>.</p>
+  <p class="muted mb-0">Low video quality or a missing face never produces Approved: the system asks for additional verification instead.</p>
+</section>
+</div>
+{% endblock %}

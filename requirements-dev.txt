@@ -1,0 +1,4 @@
+# Only needed to re-create ml_models/meso4_df.onnx from the original Keras weights
+-r requirements.txt
+h5py
+onnx

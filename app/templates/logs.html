@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from "_macros.html" import result_badge, risk with context %}
+{% block title %}Logs{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Analysis logs</h1><p>Every check is stored for auditing and investigation: scores, decision, reasons and measured latency.</p></div>
+  <a class="btn btn-ghost" href="{{ url_for('main.logs_csv', **args) }}">Export CSV</a>
+</div>
+<form class="filters" method="get">
+  <div><label class="form-label" for="q">Search</label><input class="form-control" id="q" name="q" value="{{ args.get('q','') }}" placeholder="Meeting, user or platform"></div>
+  <div><label class="form-label" for="result">Result</label>
+    <select class="form-select" id="result" name="result"><option value="">All</option>
+      {% for r in ['Approved','Suspicious','Rejected'] %}<option {{ 'selected' if args.get('result') == r }}>{{ r }}</option>{% endfor %}</select></div>
+  <div><label class="form-label" for="min_risk">Minimum risk %</label><input class="form-control" type="number" min="0" max="100" id="min_risk" name="min_risk" value="{{ args.get('min_risk','') }}"></div>
+  <div><label class="form-label" for="date_from">From</label><input class="form-control" type="date" id="date_from" name="date_from" value="{{ args.get('date_from','') }}"></div>
+  <div><label class="form-label" for="date_to">To</label><input class="form-control" type="date" id="date_to" name="date_to" value="{{ args.get('date_to','') }}"></div>
+  <button class="btn btn-primary" type="submit">Apply filters</button>
+  <a class="btn btn-ghost" href="{{ url_for('main.logs') }}">Clear</a>
+</form>
+<section class="panel"><div class="table-wrap"><table class="data">
+  <thead><tr><th>Date</th><th>Time</th><th>User</th><th>Meeting</th><th>Deepfake risk</th><th>Trust</th><th>Identity</th><th>Result</th><th>Processing time</th></tr></thead>
+  <tbody>
+  {% for a in page.items %}
+    <tr><td class="num">{{ a.timestamp|dt('%d/%m/%Y') }}</td><td class="num">{{ a.timestamp|dt('%H:%M:%S') }}</td>
+      <td>{{ a.meeting.user.name }}</td>
+      <td><a href="{{ url_for('analysis.detail', meeting_id=a.meeting_id) }}">{{ a.meeting.meeting_name }}</a> <span class="muted">{{ a.meeting.platform }}</span></td>
+      <td>{{ risk(a.deepfake_score) }}</td><td class="num">{{ a.trust_score|round|int }}%</td>
+      <td class="num">{{ (a.identity_match_score|round|int ~ '%') if a.identity_match_score is not none else '-' }}</td>
+      <td>{{ result_badge(a.result) }}</td><td class="num">{{ a.processing_time_ms|ms }}</td></tr>
+  {% else %}
+    <tr><td colspan="9" class="muted">No analyses match these filters. Clear the filters to see all records.</td></tr>
+  {% endfor %}
+  </tbody></table></div>
+  {% if page.pages > 1 %}
+  <div class="d-flex gap-2 mt-3 align-items-center">
+    {% if page.has_prev %}<a class="btn btn-ghost btn-sm" href="?{{ query_with_page(page.prev_num) }}">Previous</a>{% endif %}
+    <span class="muted">Page {{ page.page }} of {{ page.pages }} ({{ page.total }} records)</span>
+    {% if page.has_next %}<a class="btn btn-ghost btn-sm" href="?{{ query_with_page(page.next_num) }}">Next</a>{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block public %}
+<div class="panel"><h2>{{ code }}: {{ title }}</h2><p class="muted">{{ text }}</p>
+  <a class="btn btn-ghost" href="{{ url_for('main.index') }}">Go to the home page</a></div>
+{% endblock %}
+{% block content %}
+<div class="panel" style="max-width:560px"><h2>{{ code }}: {{ title }}</h2><p class="muted">{{ text }}</p>
+  <a class="btn btn-ghost" href="{{ url_for('main.dashboard') }}">Back to the dashboard</a></div>
+{% endblock %}

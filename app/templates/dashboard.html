@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import result_badge, risk with context %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Dashboard</h1><p>Deepfake checks across all monitored meetings. Updates every 5 seconds.</p></div>
+  <div><span class="status-dot {{ 'live' if data.live_sessions }}" id="live-dot"></span>
+    <span id="live-status">{{ data.live_sessions }} live session{{ '' if data.live_sessions == 1 else 's' }} running</span>
+    <a class="btn btn-primary ms-3" href="{{ url_for('analysis.live_page') }}">Start live analysis</a></div>
+</div>
+<div class="kpis">
+  <div class="kpi"><div class="kpi-label">Total analyses</div><div class="kpi-value" data-k="total">{{ data.total }}</div></div>
+  <div class="kpi ok"><div class="kpi-label">Approved</div><div class="kpi-value" data-k="approved">{{ data.approved }}</div></div>
+  <div class="kpi warn"><div class="kpi-label">Suspicious</div><div class="kpi-value" data-k="suspicious">{{ data.suspicious }}</div></div>
+  <div class="kpi bad"><div class="kpi-label">Rejected</div><div class="kpi-value" data-k="rejected">{{ data.rejected }}</div></div>
+  <div class="kpi"><div class="kpi-label">Open alerts</div><div class="kpi-value" data-k="open_alerts">{{ data.open_alerts }}</div></div>
+  <div class="kpi"><div class="kpi-label">Average risk</div><div class="kpi-value"><span data-k="avg_risk">{{ data.avg_risk }}</span>%</div></div>
+  <div class="kpi"><div class="kpi-label">Avg processing time</div><div class="kpi-value"><span data-k="avg_processing_ms">{{ data.avg_processing_ms }}</span> ms</div></div>
+</div>
+<div class="grid-2">
+  <section class="panel"><h2>Deepfake risk, last 30 analyses</h2><canvas id="trend"></canvas></section>
+  <section class="panel"><h2>Results</h2><canvas id="split"></canvas></section>
+</div>
+<section class="panel">
+  <h2>Recent analyses</h2>
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>User</th><th>Meeting</th><th>Risk</th><th>Trust</th><th>Status</th><th>Processing time</th><th>Timestamp</th></tr></thead>
+    <tbody id="recent">
+    {% for r in data.recent %}
+      <tr><td>{{ r.user }}</td><td><a href="{{ url_for('analysis.detail', meeting_id=r.meeting_id) }}">{{ r.meeting }}</a></td>
+        <td>{{ risk(r.risk) }}</td><td class="num">{{ r.trust|round|int }}%</td><td>{{ result_badge(r.result) }}</td>
+        <td class="num">{{ r.processing_ms|ms }}</td><td class="num">{{ r.timestamp }}</td></tr>
+    {% else %}
+      <tr><td colspan="7" class="muted">No analyses yet. Analyze a video or start a live session to see results here.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table></div>
+</section>
+<script type="application/json" id="dash-data">{{ data|tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

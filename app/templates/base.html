@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}{{ title or "Deepfake Detection" }}{% endblock %} | {{ org_name }}</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% macro flashes() %}
+  {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="flash {{ category }}" role="status">{{ message }}</div>
+  {% endfor %}
+{% endmacro %}
+{% if current_user.is_authenticated %}
+<div class="shell">
+  <nav class="sidebar" aria-label="Main">
+    <div class="brand">
+      <div class="brand-name">Deepfake Detection</div>
+      <div class="brand-org">{{ org_name }}</div>
+    </div>
+    {% set ep = request.endpoint or '' %}
+    <a class="nav-link-item {{ 'active' if ep == 'main.dashboard' }}" href="{{ url_for('main.dashboard') }}">Dashboard</a>
+    <a class="nav-link-item {{ 'active' if ep == 'analysis.live_page' }}" href="{{ url_for('analysis.live_page') }}">Live analysis</a>
+    <a class="nav-link-item {{ 'active' if ep == 'analysis.upload' }}" href="{{ url_for('analysis.upload') }}">Analyze a video</a>
+    <a class="nav-link-item {{ 'active' if ep in ('main.logs', 'analysis.detail') }}" href="{{ url_for('main.logs') }}">Logs</a>
+    <a class="nav-link-item {{ 'active' if ep == 'main.alerts' }}" href="{{ url_for('main.alerts') }}">Alerts
+      {% set n = open_alert_count() %}{% if n %}<span class="nav-count">{{ n }}</span>{% endif %}</a>
+    {% if current_user.is_admin %}
+    <a class="nav-link-item {{ 'active' if ep == 'identities.index' }}" href="{{ url_for('identities.index') }}">Reference identities</a>
+    <a class="nav-link-item {{ 'active' if ep == 'main.audit_log' }}" href="{{ url_for('main.audit_log') }}">Audit log</a>
+    {% endif %}
+    <div class="sidebar-foot">
+      {{ current_user.name }} ({{ current_user.role }})
+      <form method="post" action="{{ url_for('auth.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit">Sign out</button>
+      </form>
+    </div>
+  </nav>
+  <main class="main">
+    {{ flashes() }}
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% else %}
+<main class="public">
+  <div class="{% block public_class %}public-card{% endblock %}">
+    {{ flashes() }}
+    {% block public %}{% endblock %}
+  </div>
+</main>
+{% endif %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

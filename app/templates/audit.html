@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Audit log</h1><p>Security events: sign-ins, failed attempts, lockouts, analyses and alert handling. Latest 300 events.</p></div></div>
+<section class="panel"><div class="table-wrap"><table class="data">
+  <thead><tr><th>Time</th><th>User</th><th>Event</th><th>Details</th><th>IP address</th></tr></thead>
+  <tbody>{% for e in items %}
+    <tr><td class="num">{{ e.timestamp|dt }}</td><td>{{ e.user.name if e.user else '-' }}</td>
+      <td>{% if e.event in ('login_failed','account_locked','login_blocked_locked') %}<span class="badge-r bad">{{ e.event }}</span>{% else %}{{ e.event }}{% endif %}</td>
+      <td class="muted">{{ e.details }}</td><td class="num">{{ e.ip_address or '-' }}</td></tr>
+  {% else %}<tr><td colspan="5" class="muted">No events recorded yet.</td></tr>{% endfor %}</tbody>
+</table></div></section>
+{% endblock %}
